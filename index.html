@@ -1,0 +1,1197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Sizzle & Co — Online Food Order</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<style>
+  :root {
+    --coal:    #1a1410;
+    --ember:   #e85d04;
+    --flame:   #f48c06;
+    --cream:   #fdf8f0;
+    --sand:    #f2e8d5;
+    --smoke:   #6b5c4e;
+    --ash:     #c4b49e;
+    --white:   #ffffff;
+    --success: #2d6a4f;
+    --danger:  #c1121f;
+  }
+  *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+  html { scroll-behavior:smooth; }
+
+  body {
+    background: var(--cream);
+    color: var(--coal);
+    font-family: 'DM Sans', sans-serif;
+    min-height: 100vh;
+  }
+
+  /* ── HEADER ──────────────────────────────────────── */
+  header {
+    background: var(--coal);
+    padding: 0 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 68px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 2px 20px rgba(0,0,0,0.4);
+  }
+  .logo {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.6rem;
+    color: var(--flame);
+    letter-spacing: -0.5px;
+  }
+  .logo span { color: var(--white); }
+  nav { display:flex; gap:1rem; align-items:center; }
+  .nav-btn {
+    background: none;
+    border: 1.5px solid var(--ash);
+    color: var(--ash);
+    padding: 0.4rem 1rem;
+    border-radius: 50px;
+    cursor: pointer;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.85rem;
+    font-weight: 500;
+    transition: all .2s;
+    letter-spacing: 0.3px;
+  }
+  .nav-btn:hover, .nav-btn.active {
+    background: var(--ember);
+    border-color: var(--ember);
+    color: #fff;
+  }
+  .cart-btn {
+    background: var(--ember);
+    border-color: var(--ember);
+    color: #fff;
+    position: relative;
+  }
+  .cart-badge {
+    position: absolute;
+    top: -8px; right: -8px;
+    background: var(--flame);
+    color: #fff;
+    font-size: 0.7rem;
+    font-weight: 700;
+    width: 20px; height: 20px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    display: none;
+  }
+  .user-info {
+    color: var(--ash);
+    font-size: 0.85rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .user-dot {
+    width: 8px; height: 8px;
+    background: var(--flame);
+    border-radius: 50%;
+    animation: pulse 2s infinite;
+  }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+
+  /* ── HERO ────────────────────────────────────────── */
+  .hero {
+    background: var(--coal);
+    padding: 5rem 2rem;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse at 30% 50%, rgba(232,93,4,.25) 0%, transparent 70%),
+                radial-gradient(ellipse at 70% 50%, rgba(244,140,6,.15) 0%, transparent 70%);
+  }
+  .hero-content { position: relative; z-index: 1; }
+  .hero-tag {
+    display: inline-block;
+    background: rgba(232,93,4,.2);
+    border: 1px solid rgba(232,93,4,.4);
+    color: var(--flame);
+    font-size: 0.78rem;
+    font-weight: 600;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    padding: 0.4rem 1.2rem;
+    border-radius: 50px;
+    margin-bottom: 1.5rem;
+  }
+  .hero h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(2.5rem, 6vw, 4.5rem);
+    color: var(--white);
+    line-height: 1.1;
+    margin-bottom: 1rem;
+  }
+  .hero h1 em { color: var(--flame); font-style: normal; }
+  .hero p {
+    color: var(--ash);
+    font-size: 1.05rem;
+    max-width: 480px;
+    margin: 0 auto 2.5rem;
+    line-height: 1.7;
+  }
+  .hero-cta {
+    display: inline-block;
+    background: var(--ember);
+    color: #fff;
+    padding: 0.85rem 2.5rem;
+    border-radius: 50px;
+    font-weight: 600;
+    font-size: 0.95rem;
+    cursor: pointer;
+    border: none;
+    transition: transform .2s, box-shadow .2s;
+    box-shadow: 0 4px 20px rgba(232,93,4,.4);
+    font-family: 'DM Sans', sans-serif;
+  }
+  .hero-cta:hover { transform: translateY(-2px); box-shadow: 0 8px 28px rgba(232,93,4,.5); }
+
+  /* ── SECTIONS ────────────────────────────────────── */
+  .page { display: none; padding: 2rem; max-width: 1100px; margin: 0 auto; }
+  .page.active { display: block; animation: fadeIn .35s ease; }
+  @keyframes fadeIn { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
+
+  /* ── AUTH PAGES ──────────────────────────────────── */
+  .auth-wrap {
+    min-height: calc(100vh - 68px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--coal);
+    padding: 2rem;
+  }
+  .auth-card {
+    background: #231c16;
+    border: 1px solid #3a2e25;
+    border-radius: 20px;
+    padding: 3rem 2.5rem;
+    width: 100%;
+    max-width: 420px;
+    box-shadow: 0 20px 60px rgba(0,0,0,.5);
+    animation: fadeIn .4s ease;
+  }
+  .auth-card h2 {
+    font-family: 'Playfair Display', serif;
+    color: var(--white);
+    font-size: 2rem;
+    margin-bottom: 0.4rem;
+  }
+  .auth-card p { color: var(--ash); font-size: 0.9rem; margin-bottom: 2rem; }
+  .form-group { margin-bottom: 1.2rem; }
+  .form-group label {
+    display: block;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--ash);
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    margin-bottom: 0.5rem;
+  }
+  .form-group input {
+    width: 100%;
+    background: #1a1410;
+    border: 1.5px solid #3a2e25;
+    color: var(--white);
+    padding: 0.8rem 1rem;
+    border-radius: 10px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.95rem;
+    outline: none;
+    transition: border-color .2s;
+  }
+  .form-group input:focus { border-color: var(--ember); }
+  .btn-primary {
+    width: 100%;
+    background: var(--ember);
+    color: #fff;
+    border: none;
+    padding: 0.9rem;
+    border-radius: 10px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background .2s, transform .1s;
+    margin-top: 0.5rem;
+  }
+  .btn-primary:hover { background: #d45200; transform: translateY(-1px); }
+  .auth-switch {
+    text-align: center;
+    margin-top: 1.5rem;
+    color: var(--ash);
+    font-size: 0.88rem;
+  }
+  .auth-switch a { color: var(--flame); cursor: pointer; text-decoration: none; font-weight: 600; }
+  .error-msg {
+    background: rgba(193,18,31,.15);
+    border: 1px solid rgba(193,18,31,.3);
+    color: #ff6b75;
+    padding: 0.7rem 1rem;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    margin-bottom: 1rem;
+    display: none;
+  }
+  .success-msg {
+    background: rgba(45,106,79,.15);
+    border: 1px solid rgba(45,106,79,.3);
+    color: #52b788;
+    padding: 0.7rem 1rem;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    margin-bottom: 1rem;
+    display: none;
+  }
+
+  /* ── MENU PAGE ───────────────────────────────────── */
+  .section-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 2rem;
+    margin-bottom: 0.4rem;
+    color: var(--coal);
+  }
+  .section-sub { color: var(--smoke); margin-bottom: 2rem; font-size: 0.95rem; }
+
+  .category-tabs {
+    display: flex;
+    gap: 0.6rem;
+    flex-wrap: wrap;
+    margin-bottom: 2rem;
+  }
+  .tab-btn {
+    background: var(--sand);
+    border: 1.5px solid transparent;
+    color: var(--smoke);
+    padding: 0.5rem 1.2rem;
+    border-radius: 50px;
+    cursor: pointer;
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 500;
+    font-size: 0.88rem;
+    transition: all .2s;
+  }
+  .tab-btn:hover, .tab-btn.active {
+    background: var(--ember);
+    color: #fff;
+    border-color: var(--ember);
+  }
+
+  .menu-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 1.5rem;
+  }
+  .menu-card {
+    background: #fff;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 2px 12px rgba(0,0,0,.06);
+    transition: transform .25s, box-shadow .25s;
+    border: 1px solid rgba(0,0,0,.06);
+  }
+  .menu-card:hover { transform: translateY(-4px); box-shadow: 0 12px 32px rgba(0,0,0,.12); }
+  .card-img {
+    height: 160px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 4rem;
+    position: relative;
+  }
+  .card-body { padding: 1.2rem; }
+  .card-cat {
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: var(--ember);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 0.3rem;
+  }
+  .card-name {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.15rem;
+    color: var(--coal);
+    margin-bottom: 0.4rem;
+  }
+  .card-desc {
+    font-size: 0.82rem;
+    color: var(--smoke);
+    line-height: 1.5;
+    margin-bottom: 1rem;
+  }
+  .card-footer { display: flex; align-items: center; justify-content: space-between; }
+  .card-price {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--coal);
+  }
+  .card-price span { font-size: 0.75rem; font-weight: 400; color: var(--smoke); }
+  .add-btn {
+    background: var(--ember);
+    color: #fff;
+    border: none;
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    font-size: 1.3rem;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: background .2s, transform .1s;
+    font-weight: 300;
+  }
+  .add-btn:hover { background: #d45200; transform: scale(1.1); }
+
+  /* ── CART PAGE ───────────────────────────────────── */
+  .cart-empty {
+    text-align: center;
+    padding: 4rem 2rem;
+    color: var(--smoke);
+  }
+  .cart-empty .big-icon { font-size: 4rem; margin-bottom: 1rem; }
+  .cart-table { width: 100%; border-collapse: collapse; }
+  .cart-table th {
+    text-align: left;
+    font-size: 0.78rem;
+    font-weight: 600;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--smoke);
+    padding: 0.8rem 1rem;
+    border-bottom: 2px solid var(--sand);
+  }
+  .cart-table td {
+    padding: 1rem;
+    border-bottom: 1px solid var(--sand);
+    vertical-align: middle;
+  }
+  .qty-control {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+  }
+  .qty-btn {
+    background: var(--sand);
+    border: none;
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--coal);
+    display: flex; align-items: center; justify-content: center;
+    transition: background .2s;
+  }
+  .qty-btn:hover { background: var(--ember); color: #fff; }
+  .remove-btn {
+    background: none;
+    border: none;
+    color: var(--danger);
+    cursor: pointer;
+    font-size: 1.1rem;
+    padding: 0.3rem;
+    border-radius: 6px;
+    transition: background .2s;
+  }
+  .remove-btn:hover { background: rgba(193,18,31,.1); }
+
+  .bill-box {
+    background: var(--coal);
+    border-radius: 16px;
+    padding: 1.8rem;
+    margin-top: 2rem;
+    color: var(--white);
+    max-width: 400px;
+    margin-left: auto;
+  }
+  .bill-box h3 {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.3rem;
+    margin-bottom: 1.2rem;
+    color: var(--flame);
+  }
+  .bill-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.9rem;
+    color: var(--ash);
+    margin-bottom: 0.6rem;
+  }
+  .bill-total {
+    display: flex;
+    justify-content: space-between;
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: var(--white);
+    border-top: 1px solid #3a2e25;
+    padding-top: 1rem;
+    margin-top: 0.5rem;
+  }
+  .checkout-btn {
+    width: 100%;
+    background: var(--ember);
+    color: #fff;
+    border: none;
+    padding: 1rem;
+    border-radius: 10px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    margin-top: 1.2rem;
+    transition: background .2s, transform .1s;
+  }
+  .checkout-btn:hover { background: #d45200; transform: translateY(-1px); }
+
+  /* ── ORDER HISTORY ───────────────────────────────── */
+  .order-card {
+    background: #fff;
+    border-radius: 14px;
+    border: 1px solid rgba(0,0,0,.07);
+    padding: 1.5rem;
+    margin-bottom: 1.2rem;
+    box-shadow: 0 2px 8px rgba(0,0,0,.04);
+  }
+  .order-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+  }
+  .order-id {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.1rem;
+    color: var(--coal);
+  }
+  .status-badge {
+    padding: 0.3rem 0.9rem;
+    border-radius: 50px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+  }
+  .status-pending    { background:#fff3cd; color:#856404; }
+  .status-confirmed  { background:#cce5ff; color:#004085; }
+  .status-preparing  { background:#ffe0cc; color:#a04000; }
+  .status-delivered  { background:#d4edda; color:#155724; }
+  .status-cancelled  { background:#f8d7da; color:#721c24; }
+
+  .order-items { font-size: 0.88rem; color: var(--smoke); }
+  .order-item-row { display:flex; justify-content:space-between; padding:0.3rem 0; }
+  .order-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--sand);
+  }
+  .order-total { font-weight: 700; font-size: 1rem; color: var(--coal); }
+  .order-date  { font-size: 0.8rem; color: var(--ash); }
+
+  /* ── ADMIN PANEL ─────────────────────────────────── */
+  .admin-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 1.2rem;
+    margin-bottom: 2.5rem;
+  }
+  .stat-card {
+    background: var(--coal);
+    color: var(--white);
+    border-radius: 14px;
+    padding: 1.5rem;
+    text-align: center;
+  }
+  .stat-val {
+    font-family: 'Playfair Display', serif;
+    font-size: 2.2rem;
+    color: var(--flame);
+    display: block;
+    margin-bottom: 0.3rem;
+  }
+  .stat-label { font-size: 0.82rem; color: var(--ash); text-transform: uppercase; letter-spacing: 1px; }
+
+  .admin-table { width: 100%; border-collapse: collapse; background: #fff; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 12px rgba(0,0,0,.06); }
+  .admin-table th {
+    background: var(--coal);
+    color: var(--ash);
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    padding: 0.9rem 1rem;
+    text-align: left;
+  }
+  .admin-table td { padding: 0.9rem 1rem; border-bottom: 1px solid var(--sand); font-size: 0.88rem; }
+  .admin-table tr:last-child td { border-bottom: none; }
+
+  .action-btn {
+    background: var(--sand);
+    border: none;
+    color: var(--coal);
+    padding: 0.3rem 0.8rem;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.8rem;
+    font-family: 'DM Sans', sans-serif;
+    transition: all .2s;
+  }
+  .action-btn:hover { background: var(--ember); color: #fff; }
+  .action-btn.danger:hover { background: var(--danger); }
+
+  /* ── TOAST ───────────────────────────────────────── */
+  #toast {
+    position: fixed;
+    bottom: 2rem;
+    left: 50%;
+    transform: translateX(-50%) translateY(100px);
+    background: var(--coal);
+    color: var(--white);
+    padding: 0.8rem 1.8rem;
+    border-radius: 50px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    box-shadow: 0 8px 30px rgba(0,0,0,.3);
+    z-index: 999;
+    border-left: 4px solid var(--ember);
+    transition: transform .35s cubic-bezier(.34,1.56,.64,1);
+    pointer-events: none;
+  }
+  #toast.show { transform: translateX(-50%) translateY(0); }
+
+  /* ── MODAL ───────────────────────────────────────── */
+  .modal-bg {
+    display: none;
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,.6);
+    z-index: 200;
+    align-items: center;
+    justify-content: center;
+  }
+  .modal-bg.open { display: flex; }
+  .modal {
+    background: #fff;
+    border-radius: 20px;
+    padding: 2rem;
+    width: 90%;
+    max-width: 440px;
+    animation: fadeIn .3s ease;
+  }
+  .modal h3 { font-family:'Playfair Display',serif; font-size:1.4rem; margin-bottom:1rem; }
+  .modal-btns { display:flex; gap:0.8rem; margin-top:1.5rem; }
+  .btn-cancel { flex:1; background:var(--sand); border:none; padding:0.8rem; border-radius:8px; cursor:pointer; font-family:'DM Sans',sans-serif; font-weight:600; transition:.2s; }
+  .btn-cancel:hover { background:#e8d8c0; }
+  .btn-confirm { flex:1; background:var(--ember); color:#fff; border:none; padding:0.8rem; border-radius:8px; cursor:pointer; font-family:'DM Sans',sans-serif; font-weight:600; transition:.2s; }
+  .btn-confirm:hover { background:#d45200; }
+
+  /* ── UTILS ───────────────────────────────────────── */
+  .hidden { display:none !important; }
+  @media (max-width:600px) {
+    .menu-grid { grid-template-columns: 1fr; }
+    .cart-table th:nth-child(3), .cart-table td:nth-child(3) { display:none; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ── HEADER ─────────────────────────────────────── -->
+<header>
+  <div class="logo">Sizzle<span> & Co.</span></div>
+  <nav id="mainNav">
+    <div class="user-info hidden" id="userInfo">
+      <div class="user-dot"></div>
+      <span id="userNameDisplay"></span>
+    </div>
+    <button class="nav-btn" onclick="showPage('menu')" id="navMenu" style="display:none">Menu</button>
+    <button class="nav-btn" onclick="showPage('orders')" id="navOrders" style="display:none">My Orders</button>
+    <button class="nav-btn" onclick="showPage('admin')" id="navAdmin" style="display:none">⚙ Admin</button>
+    <button class="nav-btn cart-btn" onclick="showPage('cart')" id="navCart" style="display:none">
+      🛒 Cart
+      <span class="cart-badge" id="cartBadge">0</span>
+    </button>
+    <button class="nav-btn" onclick="logout()" id="navLogout" style="display:none">Logout</button>
+    <button class="nav-btn active" onclick="showPage('login')" id="navLogin">Login</button>
+    <button class="nav-btn" onclick="showPage('register')" id="navRegister">Register</button>
+  </nav>
+</header>
+
+<!-- ── HERO (shown when not logged in) ─────────────── -->
+<div id="heroSection">
+  <div class="hero">
+    <div class="hero-content">
+      <div class="hero-tag">🔥 Fresh & Hot Delivery</div>
+      <h1>Food that <em>ignites</em><br>your appetite</h1>
+      <p>Browse our curated menu, build your perfect order, and get it delivered with real-time tracking.</p>
+      <button class="hero-cta" onclick="showPage('register')">Get Started — It's Free</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── PAGES ───────────────────────────────────────── -->
+
+<!-- LOGIN -->
+<div id="page-login" class="page">
+  <div class="auth-wrap">
+    <div class="auth-card">
+      <h2>Welcome back</h2>
+      <p>Sign in to continue your order</p>
+      <div class="error-msg" id="loginError"></div>
+      <div class="form-group">
+        <label>Email Address</label>
+        <input type="email" id="loginEmail" placeholder="you@example.com"/>
+      </div>
+      <div class="form-group">
+        <label>Password</label>
+        <input type="password" id="loginPassword" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()"/>
+      </div>
+      <button class="btn-primary" onclick="doLogin()">Sign In</button>
+      <div class="auth-switch">Don't have an account? <a onclick="showPage('register')">Register here</a></div>
+      <div class="auth-switch" style="margin-top:.8rem">
+        <small style="color:var(--smoke)">Demo: admin@food.com / admin123 &nbsp;|&nbsp; awais@gmail.com / pass123</small>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- REGISTER -->
+<div id="page-register" class="page">
+  <div class="auth-wrap">
+    <div class="auth-card">
+      <h2>Create account</h2>
+      <p>Join us and start ordering</p>
+      <div class="error-msg" id="regError"></div>
+      <div class="success-msg" id="regSuccess"></div>
+      <div class="form-group">
+        <label>Full Name</label>
+        <input type="text" id="regName" placeholder="Muhammad Awais"/>
+      </div>
+      <div class="form-group">
+        <label>Email Address</label>
+        <input type="email" id="regEmail" placeholder="you@example.com"/>
+      </div>
+      <div class="form-group">
+        <label>Password</label>
+        <input type="password" id="regPassword" placeholder="Min 6 characters"/>
+      </div>
+      <div class="form-group">
+        <label>Phone</label>
+        <input type="tel" id="regPhone" placeholder="0312-1234567"/>
+      </div>
+      <button class="btn-primary" onclick="doRegister()">Create Account</button>
+      <div class="auth-switch">Already have an account? <a onclick="showPage('login')">Sign in</a></div>
+    </div>
+  </div>
+</div>
+
+<!-- MENU -->
+<div id="page-menu" class="page">
+  <h2 class="section-title">Our Menu</h2>
+  <p class="section-sub">Freshly crafted with the finest ingredients</p>
+  <div class="category-tabs" id="categoryTabs"></div>
+  <div class="menu-grid" id="menuGrid"></div>
+</div>
+
+<!-- CART -->
+<div id="page-cart" class="page">
+  <h2 class="section-title">Your Cart</h2>
+  <p class="section-sub">Review your items before checkout</p>
+  <div id="cartContent"></div>
+</div>
+
+<!-- ORDERS -->
+<div id="page-orders" class="page">
+  <h2 class="section-title">My Orders</h2>
+  <p class="section-sub">Track your order history</p>
+  <div id="ordersContent"></div>
+</div>
+
+<!-- ADMIN -->
+<div id="page-admin" class="page">
+  <h2 class="section-title">Admin Panel</h2>
+  <p class="section-sub">Manage orders, menu, and users</p>
+
+  <div class="admin-grid" id="adminStats"></div>
+
+  <div style="display:flex;gap:1rem;flex-wrap:wrap;margin-bottom:1.5rem;">
+    <button class="tab-btn active" onclick="adminTab('orders', this)">All Orders</button>
+    <button class="tab-btn" onclick="adminTab('menu', this)">Menu Items</button>
+    <button class="tab-btn" onclick="adminTab('users', this)">Users</button>
+  </div>
+
+  <div id="adminOrdersPanel"></div>
+  <div id="adminMenuPanel" style="display:none"></div>
+  <div id="adminUsersPanel" style="display:none"></div>
+</div>
+
+<!-- ── CHECKOUT MODAL ──────────────────────────────── -->
+<div class="modal-bg" id="checkoutModal">
+  <div class="modal">
+    <h3>Confirm Order</h3>
+    <p style="color:var(--smoke);font-size:.9rem;margin-bottom:1rem">Review your order summary before placing:</p>
+    <div id="modalSummary"></div>
+    <div class="modal-btns">
+      <button class="btn-cancel" onclick="closeModal()">Cancel</button>
+      <button class="btn-confirm" onclick="confirmOrder()">Place Order 🎉</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── TOAST ───────────────────────────────────────── -->
+<div id="toast"></div>
+
+<script>
+// ══════════════════════════════════════════════════════════════
+//  DATA LAYER  (simulates DB — replace calls with JDBC/API)
+// ══════════════════════════════════════════════════════════════
+const DB = {
+  users: [
+    { user_id:1, name:'Admin',           email:'admin@food.com',    password:md5('admin123'), phone:'0300-0000000', role:'admin' },
+    { user_id:2, name:'Muhammad Awais',  email:'awais@gmail.com',   password:md5('pass123'),  phone:'0312-1234567', role:'customer' }
+  ],
+  categories: [
+    {category_id:1,category_name:'Burgers'},
+    {category_id:2,category_name:'Pizza'},
+    {category_id:3,category_name:'Drinks'},
+    {category_id:4,category_name:'Desserts'},
+    {category_id:5,category_name:'Sides'}
+  ],
+  menu: [
+    {item_id:1,category_id:1,item_name:'Classic Beef Burger', description:'Juicy beef patty with lettuce, tomato & special sauce',price:350,emoji:'🍔',is_available:true},
+    {item_id:2,category_id:1,item_name:'Zinger Burger',       description:'Crispy fried chicken with coleslaw and mayo',         price:320,emoji:'🍗',is_available:true},
+    {item_id:3,category_id:1,item_name:'Double Smash Burger', description:'Double patty, double cheese, caramelised onions',     price:480,emoji:'🍔',is_available:true},
+    {item_id:4,category_id:2,item_name:'Margherita Pizza',    description:'Classic tomato sauce, fresh mozzarella, basil',       price:650,emoji:'🍕',is_available:true},
+    {item_id:5,category_id:2,item_name:'BBQ Chicken Pizza',   description:'Smoky BBQ base, grilled chicken, peppers',            price:750,emoji:'🍕',is_available:true},
+    {item_id:6,category_id:2,item_name:'Veggie Supreme',      description:'Bell peppers, olives, mushrooms, onions',             price:600,emoji:'🍕',is_available:true},
+    {item_id:7,category_id:3,item_name:'Fresh Lemonade',      description:'Chilled homemade lemonade with mint',                 price:120,emoji:'🍋',is_available:true},
+    {item_id:8,category_id:3,item_name:'Mango Shake',         description:'Thick fresh mango milkshake',                        price:150,emoji:'🥭',is_available:true},
+    {item_id:9,category_id:3,item_name:'Soft Drink (Can)',    description:'Pepsi / 7UP / Mountain Dew',                         price:80, emoji:'🥤',is_available:true},
+    {item_id:10,category_id:4,item_name:'Chocolate Lava Cake',description:'Warm chocolate cake with molten centre',             price:220,emoji:'🍫',is_available:true},
+    {item_id:11,category_id:4,item_name:'Vanilla Ice Cream',  description:'Two scoops of classic vanilla ice cream',            price:150,emoji:'🍦',is_available:true},
+    {item_id:12,category_id:5,item_name:'Crispy Fries',       description:'Golden french fries with dipping sauce',             price:180,emoji:'🍟',is_available:true},
+    {item_id:13,category_id:5,item_name:'Onion Rings',        description:'Beer-battered crispy onion rings',                   price:160,emoji:'🧅',is_available:true}
+  ],
+  orders: [],
+  order_details: [],
+  nextOrderId: 1,
+  nextUserId: 3
+};
+
+// ── Utility: Simple MD5 simulation (for demo) ─────────────────
+function md5(s) {
+  // Simple hash for demo — in Java use MessageDigest.getInstance("MD5")
+  let h = 0; for(let i=0;i<s.length;i++) h=Math.imul(31,h)+s.charCodeAt(i)|0;
+  return 'md5_' + Math.abs(h).toString(16).padStart(8,'0');
+}
+
+// ══════════════════════════════════════════════════════════════
+//  STATE
+// ══════════════════════════════════════════════════════════════
+let currentUser = null;
+let cart = {};  // { itemId: quantity }
+let activeCategory = 'All';
+
+// ══════════════════════════════════════════════════════════════
+//  NAVIGATION
+// ══════════════════════════════════════════════════════════════
+function showPage(name) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  const page = document.getElementById('page-' + name);
+  if (page) {
+    page.classList.add('active');
+    document.getElementById('heroSection').style.display =
+      (currentUser || name === 'login' || name === 'register') ? 'none' : 'block';
+  }
+  if (name === 'menu')   renderMenu();
+  if (name === 'cart')   renderCart();
+  if (name === 'orders') renderOrders();
+  if (name === 'admin')  renderAdmin();
+  updateNav();
+}
+
+function updateNav() {
+  const loggedIn = !!currentUser;
+  const isAdmin  = loggedIn && currentUser.role === 'admin';
+  el('navLogin').style.display    = loggedIn ? 'none'   : '';
+  el('navRegister').style.display = loggedIn ? 'none'   : '';
+  el('navLogout').style.display   = loggedIn ? ''       : 'none';
+  el('navMenu').style.display     = loggedIn ? ''       : 'none';
+  el('navOrders').style.display   = (loggedIn && !isAdmin) ? '' : 'none';
+  el('navAdmin').style.display    = isAdmin  ? ''       : 'none';
+  el('navCart').style.display     = (loggedIn && !isAdmin) ? '' : 'none';
+  el('userInfo').classList.toggle('hidden', !loggedIn);
+  if (loggedIn) el('userNameDisplay').textContent = currentUser.name.split(' ')[0];
+  updateCartBadge();
+}
+
+// ══════════════════════════════════════════════════════════════
+//  AUTH
+// ══════════════════════════════════════════════════════════════
+function doLogin() {
+  const email = el('loginEmail').value.trim();
+  const pass  = el('loginPassword').value.trim();
+  if (!email || !pass) { showError('loginError', 'Please fill all fields.'); return; }
+  const user = DB.users.find(u => u.email === email && u.password === md5(pass));
+  if (user) {
+    currentUser = user;
+    showToast('Welcome back, ' + user.name.split(' ')[0] + '! 👋');
+    el('loginEmail').value = '';
+    el('loginPassword').value = '';
+    hideMsg('loginError');
+    showPage(user.role === 'admin' ? 'admin' : 'menu');
+  } else {
+    showError('loginError', 'Invalid email or password.');
+  }
+}
+
+function doRegister() {
+  const name  = el('regName').value.trim();
+  const email = el('regEmail').value.trim();
+  const pass  = el('regPassword').value.trim();
+  const phone = el('regPhone').value.trim();
+  hideMsg('regError'); hideMsg('regSuccess');
+  if (!name || !email || !pass || !phone) { showError('regError', 'Please fill all fields.'); return; }
+  if (pass.length < 6) { showError('regError', 'Password must be at least 6 characters.'); return; }
+  if (DB.users.find(u => u.email === email)) { showError('regError', 'Email already registered.'); return; }
+  const newUser = { user_id: DB.nextUserId++, name, email, password: md5(pass), phone, role:'customer' };
+  DB.users.push(newUser);
+  showSuccess('regSuccess', 'Account created! Please sign in.');
+  setTimeout(() => showPage('login'), 1500);
+}
+
+function logout() {
+  currentUser = null;
+  cart = {};
+  updateNav();
+  document.getElementById('heroSection').style.display = 'block';
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  showToast('Logged out. See you soon!');
+}
+
+// ══════════════════════════════════════════════════════════════
+//  MENU
+// ══════════════════════════════════════════════════════════════
+function renderMenu() {
+  const tabs = el('categoryTabs');
+  const grid = el('menuGrid');
+  const cats = ['All', ...DB.categories.map(c => c.category_name)];
+  tabs.innerHTML = cats.map(c =>
+    `<button class="tab-btn ${c===activeCategory?'active':''}" onclick="filterMenu('${c}', this)">${c}</button>`
+  ).join('');
+  const items = DB.menu.filter(m => m.is_available &&
+    (activeCategory === 'All' || DB.categories.find(c=>c.category_id===m.category_id)?.category_name === activeCategory));
+  const bgColors = ['#fff5eb','#fff0f0','#f0f7ff','#f0fff4','#fdf5ff'];
+  grid.innerHTML = items.map((item,i) => {
+    const catName = DB.categories.find(c=>c.category_id===item.category_id)?.category_name || '';
+    const inCart  = cart[item.item_id] || 0;
+    return `<div class="menu-card">
+      <div class="card-img" style="background:${bgColors[item.category_id-1]||'#fff5eb'}">${item.emoji}</div>
+      <div class="card-body">
+        <div class="card-cat">${catName}</div>
+        <div class="card-name">${item.item_name}</div>
+        <div class="card-desc">${item.description}</div>
+        <div class="card-footer">
+          <div class="card-price"><span>Rs.</span>${item.price.toFixed(0)}</div>
+          <div style="display:flex;align-items:center;gap:.5rem">
+            ${inCart>0 ? `<span style="font-size:.8rem;color:var(--ember);font-weight:600">×${inCart}</span>` : ''}
+            <button class="add-btn" onclick="addToCart(${item.item_id})">+</button>
+          </div>
+        </div>
+      </div>
+    </div>`;
+  }).join('') || '<p style="color:var(--smoke);grid-column:1/-1">No items in this category.</p>';
+}
+
+function filterMenu(cat, btn) {
+  activeCategory = cat;
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderMenu();
+}
+
+// ══════════════════════════════════════════════════════════════
+//  CART
+// ══════════════════════════════════════════════════════════════
+function addToCart(itemId) {
+  cart[itemId] = (cart[itemId] || 0) + 1;
+  updateCartBadge();
+  const item = DB.menu.find(m => m.item_id === itemId);
+  showToast(item.emoji + ' ' + item.item_name + ' added to cart!');
+  renderMenu();
+}
+
+function changeQty(itemId, delta) {
+  cart[itemId] = (cart[itemId] || 0) + delta;
+  if (cart[itemId] <= 0) delete cart[itemId];
+  updateCartBadge();
+  renderCart();
+}
+
+function removeFromCart(itemId) {
+  delete cart[itemId];
+  updateCartBadge();
+  renderCart();
+}
+
+function updateCartBadge() {
+  const total = Object.values(cart).reduce((a,b)=>a+b, 0);
+  const badge = el('cartBadge');
+  badge.textContent = total;
+  badge.style.display = total > 0 ? 'flex' : 'none';
+}
+
+function cartTotal() {
+  return Object.entries(cart).reduce((sum, [id, qty]) => {
+    const item = DB.menu.find(m => m.item_id == id);
+    return sum + (item ? item.price * qty : 0);
+  }, 0);
+}
+
+function renderCart() {
+  const container = el('cartContent');
+  const items = Object.entries(cart);
+  if (items.length === 0) {
+    container.innerHTML = `<div class="cart-empty">
+      <div class="big-icon">🛒</div>
+      <p>Your cart is empty</p>
+      <button class="btn-primary" style="width:auto;margin-top:1rem;padding:.7rem 2rem" onclick="showPage('menu')">Browse Menu</button>
+    </div>`;
+    return;
+  }
+  const rows = items.map(([id, qty]) => {
+    const item = DB.menu.find(m => m.item_id == id);
+    if (!item) return '';
+    return `<tr>
+      <td><strong>${item.emoji} ${item.item_name}</strong></td>
+      <td>
+        <div class="qty-control">
+          <button class="qty-btn" onclick="changeQty(${id},-1)">−</button>
+          <span>${qty}</span>
+          <button class="qty-btn" onclick="changeQty(${id},1)">+</button>
+        </div>
+      </td>
+      <td>Rs.${item.price.toFixed(0)}</td>
+      <td><strong>Rs.${(item.price*qty).toFixed(0)}</strong></td>
+      <td><button class="remove-btn" onclick="removeFromCart(${id})" title="Remove">🗑</button></td>
+    </tr>`;
+  }).join('');
+
+  const total = cartTotal();
+  const billRows = items.map(([id,qty]) => {
+    const item = DB.menu.find(m=>m.item_id==id);
+    return item ? `<div class="bill-row"><span>${item.item_name} ×${qty}</span><span>Rs.${(item.price*qty).toFixed(0)}</span></div>` : '';
+  }).join('');
+
+  container.innerHTML = `
+    <table class="cart-table">
+      <thead><tr><th>Item</th><th>Qty</th><th>Unit</th><th>Subtotal</th><th></th></tr></thead>
+      <tbody>${rows}</tbody>
+    </table>
+    <div class="bill-box">
+      <h3>Order Summary</h3>
+      ${billRows}
+      <div class="bill-total"><span>Total</span><span>Rs.${total.toFixed(0)}</span></div>
+      <button class="checkout-btn" onclick="openCheckout()">Proceed to Checkout →</button>
+    </div>`;
+}
+
+function openCheckout() {
+  const items = Object.entries(cart).map(([id,qty]) => {
+    const item = DB.menu.find(m=>m.item_id==id);
+    return item ? `<div style="display:flex;justify-content:space-between;font-size:.88rem;padding:.3rem 0;color:var(--smoke)">
+      <span>${item.item_name} ×${qty}</span><span>Rs.${(item.price*qty).toFixed(0)}</span></div>` : '';
+  }).join('');
+  el('modalSummary').innerHTML = items +
+    `<div style="display:flex;justify-content:space-between;font-weight:700;padding:.8rem 0 0;border-top:1px solid var(--sand);margin-top:.5rem">
+       <span>Total</span><span>Rs.${cartTotal().toFixed(0)}</span></div>`;
+  el('checkoutModal').classList.add('open');
+}
+
+function closeModal() { el('checkoutModal').classList.remove('open'); }
+
+function confirmOrder() {
+  const orderId = DB.nextOrderId++;
+  const details = Object.entries(cart).map(([id,qty]) => {
+    const item = DB.menu.find(m=>m.item_id==id);
+    return { order_id:orderId, item_id:parseInt(id), quantity:qty, unit_price:item.price, item_name:item.item_name };
+  });
+  const order = {
+    order_id: orderId,
+    user_id: currentUser.user_id,
+    user_name: currentUser.name,
+    order_date: new Date().toLocaleString(),
+    total_amount: cartTotal(),
+    status: 'pending',
+    details
+  };
+  DB.orders.push(order);
+  cart = {};
+  updateCartBadge();
+  closeModal();
+  showToast('🎉 Order #' + orderId + ' placed successfully!');
+  showPage('orders');
+}
+
+// ══════════════════════════════════════════════════════════════
+//  ORDER HISTORY
+// ══════════════════════════════════════════════════════════════
+function renderOrders() {
+  const myOrders = DB.orders.filter(o => o.user_id === currentUser.user_id).reverse();
+  if (myOrders.length === 0) {
+    el('ordersContent').innerHTML = `<div class="cart-empty">
+      <div class="big-icon">📋</div>
+      <p>No orders yet</p>
+      <button class="btn-primary" style="width:auto;margin-top:1rem;padding:.7rem 2rem" onclick="showPage('menu')">Start Ordering</button>
+    </div>`;
+    return;
+  }
+  el('ordersContent').innerHTML = myOrders.map(o => `
+    <div class="order-card">
+      <div class="order-header">
+        <div class="order-id">Order #${o.order_id}</div>
+        <span class="status-badge status-${o.status}">${o.status}</span>
+      </div>
+      <div class="order-items">
+        ${o.details.map(d => `<div class="order-item-row">
+          <span>${d.item_name} ×${d.quantity}</span>
+          <span>Rs.${(d.unit_price*d.quantity).toFixed(0)}</span>
+        </div>`).join('')}
+      </div>
+      <div class="order-footer">
+        <span class="order-total">Total: Rs.${o.total_amount.toFixed(0)}</span>
+        <span class="order-date">${o.order_date}</span>
+      </div>
+    </div>`).join('');
+}
+
+// ══════════════════════════════════════════════════════════════
+//  ADMIN
+// ══════════════════════════════════════════════════════════════
+function renderAdmin() {
+  const totalOrders   = DB.orders.length;
+  const totalRevenue  = DB.orders.filter(o=>o.status!=='cancelled').reduce((s,o)=>s+o.total_amount,0);
+  const totalUsers    = DB.users.filter(u=>u.role==='customer').length;
+  const pendingOrders = DB.orders.filter(o=>o.status==='pending').length;
+
+  el('adminStats').innerHTML = [
+    ['Total Orders',    totalOrders,              '📦'],
+    ['Revenue (Rs.)',   totalRevenue.toFixed(0),  '💰'],
+    ['Customers',       totalUsers,               '👤'],
+    ['Pending Orders',  pendingOrders,            '⏳']
+  ].map(([label,val,icon]) => `<div class="stat-card">
+    <span style="font-size:2rem">${icon}</span>
+    <span class="stat-val">${val}</span>
+    <span class="stat-label">${label}</span>
+  </div>`).join('');
+
+  renderAdminOrders();
+}
+
+function adminTab(tab, btn) {
+  document.querySelectorAll('#page-admin .tab-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  el('adminOrdersPanel').style.display = tab==='orders' ? '' : 'none';
+  el('adminMenuPanel').style.display   = tab==='menu'   ? '' : 'none';
+  el('adminUsersPanel').style.display  = tab==='users'  ? '' : 'none';
+  if (tab==='orders') renderAdminOrders();
+  if (tab==='menu')   renderAdminMenu();
+  if (tab==='users')  renderAdminUsers();
+}
+
+function renderAdminOrders() {
+  if (DB.orders.length === 0) {
+    el('adminOrdersPanel').innerHTML = '<p style="color:var(--smoke);padding:2rem 0">No orders yet.</p>';
+    return;
+  }
+  const statusOptions = ['pending','confirmed','preparing','delivered','cancelled'];
+  el('adminOrdersPanel').innerHTML = `<table class="admin-table">
+    <thead><tr><th>#</th><th>Customer</th><th>Date</th><th>Total</th><th>Status</th><th>Update</th></tr></thead>
+    <tbody>${[...DB.orders].reverse().map(o=>`<tr>
+      <td><strong>#${o.order_id}</strong></td>
+      <td>${o.user_name}</td>
+      <td>${o.order_date}</td>
+      <td><strong>Rs.${o.total_amount.toFixed(0)}</strong></td>
+      <td><span class="status-badge status-${o.status}">${o.status}</span></td>
+      <td>
+        <select onchange="updateOrderStatus(${o.order_id}, this.value)" style="padding:.3rem .5rem;border-radius:6px;border:1px solid var(--sand);font-family:'DM Sans',sans-serif;font-size:.8rem">
+          ${statusOptions.map(s=>`<option value="${s}" ${s===o.status?'selected':''}>${s}</option>`).join('')}
+        </select>
+      </td>
+    </tr>`).join('')}</tbody>
+  </table>`;
+}
+
+function updateOrderStatus(orderId, newStatus) {
+  const order = DB.orders.find(o => o.order_id === orderId);
+  if (order) {
+    order.status = newStatus;
+    showToast('Order #' + orderId + ' → ' + newStatus);
+    renderAdmin();
+  }
+}
+
+function renderAdminMenu() {
+  el('adminMenuPanel').innerHTML = `<table class="admin-table">
+    <thead><tr><th>ID</th><th>Item</th><th>Category</th><th>Price</th><th>Available</th><th>Action</th></tr></thead>
+    <tbody>${DB.menu.map(m=>{
+      const cat = DB.categories.find(c=>c.category_id===m.category_id)?.category_name||'';
+      return `<tr>
+        <td>${m.item_id}</td>
+        <td>${m.emoji} ${m.item_name}</td>
+        <td>${cat}</td>
+        <td>Rs.${m.price}</td>
+        <td><span class="status-badge ${m.is_available?'status-delivered':'status-cancelled'}">${m.is_available?'Yes':'No'}</span></td>
+        <td><button class="action-btn" onclick="toggleItem(${m.item_id})">${m.is_available?'Disable':'Enable'}</button></td>
+      </tr>`;}).join('')}
+    </tbody>
+  </table>`;
+}
+
+function toggleItem(itemId) {
+  const item = DB.menu.find(m=>m.item_id===itemId);
+  if (item) { item.is_available = !item.is_available; showToast(item.item_name + ' ' + (item.is_available?'enabled':'disabled')); renderAdminMenu(); }
+}
+
+function renderAdminUsers() {
+  el('adminUsersPanel').innerHTML = `<table class="admin-table">
+    <thead><tr><th>ID</th><th>Name</th><th>Email</th><th>Phone</th><th>Role</th></tr></thead>
+    <tbody>${DB.users.map(u=>`<tr>
+      <td>${u.user_id}</td><td>${u.name}</td><td>${u.email}</td><td>${u.phone}</td>
+      <td><span class="status-badge ${u.role==='admin'?'status-confirmed':'status-delivered'}">${u.role}</span></td>
+    </tr>`).join('')}</tbody>
+  </table>`;
+}
+
+// ══════════════════════════════════════════════════════════════
+//  UTILS
+// ══════════════════════════════════════════════════════════════
+function el(id) { return document.getElementById(id); }
+let toastTimer;
+function showToast(msg) {
+  const t = el('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 2800);
+}
+function showError(id, msg)   { const e=el(id); e.textContent=msg; e.style.display='block'; }
+function showSuccess(id, msg) { const e=el(id); e.textContent=msg; e.style.display='block'; }
+function hideMsg(id)          { el(id).style.display='none'; }
+
+// ── INIT ──────────────────────────────────────────────────────
+document.getElementById('heroSection').style.display = 'block';
+</script>
+</body>
+</html>
