@@ -1,5 +1,17 @@
 # Online Food Order System
-**Student:** Muhammad Awais | **CMS:** 023-25-0156
+
+## Student Details
+- Name    : Muhammad Awais
+- CMS     : 023-25-0156
+- Section : (C)
+
+## GitHub Repository
+https://github.com/awaisghani42/FoodOrderSystem
+
+## Video Demo
+(YouTube link )
+
+---
 
 ---
 
